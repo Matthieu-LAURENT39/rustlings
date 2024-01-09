@@ -27,8 +27,6 @@ enum IntoColorError {
     IntConversion,
 }
 
-// I AM NOT DONE
-
 // Your task is to complete this implementation and return an Ok result of inner
 // type Color. You need to create an implementation for a tuple of three
 // integers, an array of three integers, and a slice of integers.
@@ -41,6 +39,20 @@ enum IntoColorError {
 impl TryFrom<(i16, i16, i16)> for Color {
     type Error = IntoColorError;
     fn try_from(tuple: (i16, i16, i16)) -> Result<Self, Self::Error> {
+        // V1
+        // for v in [tuple.0, tuple.1, tuple.2] {
+        //     if !(0 <= v && v <= 255) {
+        //         return Err(IntoColorError::IntConversion);
+        //     }
+        // }
+        // Ok(Color {red: tuple.0 as u8, green: tuple.1 as u8, blue: tuple.2 as u8})
+
+        // V2, can probably be more efficient still
+        Ok(Color {
+            red: u8::try_from(tuple.0).map_err(|x| IntoColorError::IntConversion)?, 
+            green: u8::try_from(tuple.1).map_err(|x| IntoColorError::IntConversion)?, 
+            blue: u8::try_from(tuple.2).map_err(|x| IntoColorError::IntConversion)?,
+        })
     }
 }
 
@@ -48,6 +60,22 @@ impl TryFrom<(i16, i16, i16)> for Color {
 impl TryFrom<[i16; 3]> for Color {
     type Error = IntoColorError;
     fn try_from(arr: [i16; 3]) -> Result<Self, Self::Error> {
+        // V1
+        // if arr.iter().all(|n| 0 <= *n && *n <= 255) {
+        //     Ok(Color {red: arr[0] as u8, green: arr[1] as u8, blue: arr[2] as u8})
+        // } else {
+        //     Err(IntoColorError::IntConversion)
+        // }
+
+        // V2, can probably be more efficient still
+        // Ok(Color {
+        //     red: u8::try_from(arr[0]).map_err(|x| IntoColorError::IntConversion)?, 
+        //     green: u8::try_from(arr[1]).map_err(|x| IntoColorError::IntConversion)?, 
+        //     blue: u8::try_from(arr[2]).map_err(|x| IntoColorError::IntConversion)?,
+        // })
+
+        // V3, we reuse the slice implementation
+        arr[0..3].try_into()
     }
 }
 
@@ -55,6 +83,27 @@ impl TryFrom<[i16; 3]> for Color {
 impl TryFrom<&[i16]> for Color {
     type Error = IntoColorError;
     fn try_from(slice: &[i16]) -> Result<Self, Self::Error> {
+        if slice.len() != 3 {
+            return Err(IntoColorError::BadLen);
+        }
+        // V1
+        // // I wonder if there'd be a way to reuse the array implementation
+        // // without duplicating code
+        // if slice.iter().all(|n| 0 <= *n && *n <= 255) {
+        //     Ok(Color {red: slice[0] as u8, green: slice[1] as u8, blue: slice[2] as u8})
+        // } else {
+        //     Err(IntoColorError::IntConversion)
+        // }
+
+        // V2, so repetitive, surely there's a way to avoid all this repetition
+        // Ok(Color {
+        //     red: u8::try_from(slice[0]).map_err(|x| IntoColorError::IntConversion)?, 
+        //     green: u8::try_from(slice[1]).map_err(|x| IntoColorError::IntConversion)?, 
+        //     blue: u8::try_from(slice[2]).map_err(|x| IntoColorError::IntConversion)?,
+        // })
+
+        // V3, we reuse the tuple implementation
+        (slice[0], slice[1], slice[2]).try_into()
     }
 }
 
